@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player Sederhana</title>
+    <style>
+        /* CSS untuk Tampilan */
+        body {
+        font-family: sans-serif;
+        background-color: #121212; /* Warna latar belakang gelap sebagai fallback */
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+
+        /* 👇 TAMBAH ATAU GANTI BAGIAN INI UNTUK BACKGROUND GAMBAR 👇 */
+        background-image: url('bg1.jpg'); /* Ganti 'galaxy.jpg' dengan nama file Anda */
+        background-size: cover; /* Menyesuaikan ukuran gambar agar menutupi seluruh area */
+        background-position: center; /* Memusatkan gambar */
+        background-attachment: fixed; /* Membuat gambar tetap saat discroll (opsional) */
+        /* 👆 SAMPAI DI SINI 👆 */
+        }
+
+        .player-container {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 60px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #1db954; /* Warna hijau Spotify */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Daftar Lagu */
+        .song-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .song-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background-color: #282828;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .song-item:hover {
+            background-color: #3e3e3e;
+        }
+
+        .song-item.active {
+            background-color: #1db954;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .song-title {
+            flex-grow: 1;
+        }
+
+        .song-duration {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        /* Kontrol Pemutar */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-song-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .current-song-info h3 {
+            margin: 0;
+            color: #1db954;
+        }
+
+        .current-song-info p {
+            margin: 5px 0 0 0;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .playback-controls button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 2em;
+            cursor: pointer;
+            padding: 5px 15px;
+            transition: color 0.2s;
+        }
+
+        .playback-controls button:hover {
+            color: #1db954;
+        }
+
+        /* Timer/Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-display {
+            font-size: 0.8em;
+            opacity: 0.8;
+            width: 40px;
+            text-align: center;
+        }
+
+        #progress-bar {
+            flex-grow: 1;
+            height: 5px;
+            background-color: #535353;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #progress-indicator {
+            width: 0%;
+            height: 100%;
+            background-color: #1db954;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-container">
+    <h1>Playlist By Febri Adam</h1>
+
+    <div class="current-song-info">
+        <h3 id="current-title">Pilih Lagu</h3>
+        <p id="current-artist">...</p>
+    </div>
+
+    <ul class="song-list" id="song-list">
+        </ul>
+
+    <div class="controls">
+        <div class="playback-controls">
+            <button id="prev-btn">⏮</button>
+            <button id="play-pause-btn">▶</button>
+            <button id="next-btn">⏭</button>
+        </div>
+
+        <div class="progress-bar-container">
+            <span id="current-time" class="time-display">0:00</span>
+            <div id="progress-bar">
+                <div id="progress-indicator"></div>
+            </div>
+            <span id="total-duration" class="time-display">0:00</span>
+        </div>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+</div>
+
+<script>
+    const songs = [
+        { title: "Multo", artist: "cup of joe", src: "multo.mp3", duration: "4:01" },
+        { title: "Message In a bottle", artist: "Taylor Swift", src: "message.mp3", duration: "3:47" },
+        { title: "Berubah", artist: "Tenxi", src: "berubah.mp3", duration: "3:21" },
+        { title: "Mejikuhibiu", artist: "tenxi", src: "mejiku.mp3", duration: "3:31" },
+        { title: "kasih aba aba", artist: "tenxi", src: "abaaba.mp3", duration: "2:49" },
+        { title: "bintang 5", artist: "tenxi", src: "5.mp3", duration: "4:31" }
+        // 👆 SAMPAI DI SINI 👆
+        // CATATAN PENTING: Anda harus mengganti 'song1.mp3', 'song2.mp3', dll.,
+        // dengan path file audio yang sebenarnya (misalnya, 'assets/music/lagu-favorit.mp3')
+        // dan menempatkan file-file tersebut di folder yang sama (atau path yang benar).
+        // Jika tidak ada file audio, player tidak akan berfungsi penuh.
+        // Untuk demo ini, kami menggunakan properti 'duration' statis.
+    ];
+
+    const audioPlayer = document.getElementById('audio-player');
+    const songListElement = document.getElementById('song-list');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const currentTitle = document.getElementById('current-title');
+    const currentArtist = document.getElementById('current-artist');
+    const currentTimeDisplay = document.getElementById('current-time');
+    const totalDurationDisplay = document.getElementById('total-duration');
+    const progressBar = document.getElementById('progress-bar');
+    const progressIndicator = document.getElementById('progress-indicator');
+
+    let currentSongIndex = -1;
+    let isPlaying = false;
+
+    // Fungsi untuk memformat waktu (detik ke M:SS)
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${remainingSeconds}`;
+    }
+
+    // Fungsi untuk memuat dan memainkan lagu
+    function loadAndPlaySong(index) {
+        if (index < 0 || index >= songs.length) return;
+
+        currentSongIndex = index;
+        const song = songs[currentSongIndex];
+
+        // Update tampilan info lagu
+        currentTitle.textContent = song.title;
+        currentArtist.textContent = song.artist;
+        
+        // Tandai lagu yang aktif
+        document.querySelectorAll('.song-item').forEach((item, i) => {
+            item.classList.remove('active');
+            if (i === index) {
+                item.classList.add('active');
+            }
+        });
+
+        // Muat file audio
+        audioPlayer.src = song.src;
+        totalDurationDisplay.textContent = song.duration; // Tampilkan durasi statis
+
+        // Ketika metadata audio dimuat (untuk mendapatkan durasi yang sebenarnya jika file ada)
+        audioPlayer.onloadedmetadata = () => {
+             // Jika file audio ada dan durasi tersedia
+            if (audioPlayer.duration && isFinite(audioPlayer.duration)) {
+                totalDurationDisplay.textContent = formatTime(audioPlayer.duration);
+            }
+            playAudio();
+        };
+
+        // Jika file audio tidak dapat dimuat, mainkan suara notifikasi sebentar (opsional)
+        audioPlayer.onerror = () => {
+             console.error("Gagal memuat file audio:", song.src);
+             // Karena file MP3 tidak ada, kita hanya akan mengubah tombol dan progress bar
+             // Tanpa memainkan audio.
+             playAudio();
+        };
+    }
+
+    // Fungsi untuk memutar audio
+    function playAudio() {
+        if (currentSongIndex === -1) {
+            // Jika belum ada lagu yang dipilih, pilih lagu pertama
+            loadAndPlaySong(0);
+            return;
+        }
+        
+        // Coba putar audio. Ini bisa gagal jika browser memblokir auto-play.
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Play berhasil
+                isPlaying = true;
+                playPauseBtn.textContent = '⏸';
+            }).catch(error => {
+                // Play gagal (mis. karena auto-play diblokir)
+                console.error("Gagal memutar audio:", error);
+                isPlaying = true; // Anggap saja sedang 'bermain' dari sudut pandang UI
+                playPauseBtn.textContent = '⏸';
+            });
+        }
+    }
+
+    // Fungsi untuk menjeda audio
+    function pauseAudio() {
+        audioPlayer.pause();
+        isPlaying = false;
+        playPauseBtn.textContent = '▶';
+    }
+
+    // Toggle Play/Pause
+    playPauseBtn.addEventListener('click', () => {
+        if (currentSongIndex === -1) {
+            loadAndPlaySong(0); // Pilih lagu pertama jika belum ada
+        } else if (isPlaying) {
+            pauseAudio();
+        } else {
+            playAudio();
+        }
+    });
+
+    // Lagu berikutnya
+    nextBtn.addEventListener('click', () => {
+        const nextIndex = (currentSongIndex + 1) % songs.length;
+        loadAndPlaySong(nextIndex);
+    });
+
+    // Lagu sebelumnya
+    prevBtn.addEventListener('click', () => {
+        const prevIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+        loadAndPlaySong(prevIndex);
+    });
+
+    // Update timer dan progress bar saat audio berjalan
+    audioPlayer.addEventListener('timeupdate', () => {
+        const duration = audioPlayer.duration;
+        const currentTime = audioPlayer.currentTime;
+
+        // Update progress bar
+        if (isFinite(duration) && duration > 0) {
+            const progressPercent = (currentTime / duration) * 100;
+            progressIndicator.style.width = `${progressPercent}%`;
+            currentTimeDisplay.textContent = formatTime(currentTime);
+        } else if (isPlaying) {
+            // Menghitung waktu berjalan secara manual jika durasi tidak tersedia (simulasi)
+            currentTimeDisplay.textContent = formatTime(currentTime); 
+            // Dalam kasus file tidak ada, progress bar tidak akan bergerak
+        }
+    });
+
+    // Putar lagu berikutnya saat lagu selesai
+    audioPlayer.addEventListener('ended', () => {
+        const nextIndex = (currentSongIndex + 1) % songs.length;
+        loadAndPlaySong(nextIndex);
+    });
+
+    // Fungsi untuk menginisialisasi daftar lagu
+    function renderSongList() {
+        songs.forEach((song, index) => {
+            const listItem = document.createElement('li');
+            listItem.classList.add('song-item');
+            listItem.innerHTML = `
+                <span class="song-title">${index + 1}. ${song.title}</span>
+                <span class="song-duration">${song.duration}</span>
+            `;
+            listItem.addEventListener('click', () => loadAndPlaySong(index));
+            songListElement.appendChild(listItem);
+        });
+    }
+
+    // Inisialisasi: Render daftar lagu
+    renderSongList();
+</script>
+
+</body>
+</html>
